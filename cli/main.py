@@ -948,9 +948,9 @@ def run_market_narrative_analysis():
             
             # 创建LLM实例
             if llm_provider == "dashscope":
-                from tradingagents.llm_adapters.dashscope_openai_adapter import DashScopeOpenAIAdapter
-                llm_instance = DashScopeOpenAIAdapter(
-                    model_name=llm_model,
+                from tradingagents.llm_adapters import ChatDashScopeOpenAI
+                llm_instance = ChatDashScopeOpenAI(
+                    model=llm_model,
                     api_key=os.getenv("DASHSCOPE_API_KEY"),
                     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
                 )
@@ -962,9 +962,9 @@ def run_market_narrative_analysis():
                 )
             else:
                 # 默认使用dashscope
-                from tradingagents.llm_adapters.dashscope_openai_adapter import DashScopeOpenAIAdapter
-                llm_instance = DashScopeOpenAIAdapter(
-                    model_name=llm_model,
+                from tradingagents.llm_adapters import ChatDashScopeOpenAI
+                llm_instance = ChatDashScopeOpenAI(
+                    model=llm_model,
                     api_key=os.getenv("DASHSCOPE_API_KEY"),
                     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
                 )

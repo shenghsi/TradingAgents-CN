@@ -129,6 +129,13 @@ The new analyst will provide insights into the current market narrative and tren
 - **Web和CLI同步**: 同时更新Web界面和CLI的叙事分析逻辑，确保一致性
 - **用户体验改进**: 当用户选择纯叙事分析时，系统始终保持在独立模式，不会意外启动完整的多代理系统
 
+### ✅ **COMPLETED (Phase 2.6 - Import Fix)**
+- **导入错误修复**: 修复独立叙事分析模式中的 `DashScopeOpenAIAdapter` 导入错误
+- **正确类名使用**: 将错误的 `DashScopeOpenAIAdapter` 替换为正确的 `ChatDashScopeOpenAI`
+- **参数名称修正**: 将 `model_name` 参数修正为 `model` 参数
+- **Web和CLI同步修复**: 同时修复Web界面和CLI中的导入问题
+- **测试验证**: 通过完整测试验证修复的有效性
+
 ### 🎯 **REVISED PRIORITY ORDER**
 1. **Priority 1**: Complete core system integration (Item 9-10)
 2. **Priority 2**: Implement standalone analysis mode (Item 10)
