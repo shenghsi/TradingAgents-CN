@@ -144,6 +144,14 @@ The new analyst will provide insights into the current market narrative and tren
 - **Web和CLI同步修复**: 同时修复Web界面和CLI中的调用问题
 - **测试验证**: 通过完整测试验证修复的有效性
 
+### ✅ **COMPLETED (Phase 2.8 - Global News Fix)**
+- **API兼容性修复**: 修复 `get_global_news_openai` 函数与DashScope API的兼容性问题
+- **Assistants API替换**: 将不兼容的 `client.responses.create` 替换为标准的 `client.chat.completions.create`
+- **回退机制**: 添加Google新闻作为回退方案，确保新闻获取的可靠性
+- **错误处理**: 改进错误处理，提供清晰的错误信息和回退选项
+- **工具可用性**: 确保叙事分析师能够正常使用新闻工具
+- **测试验证**: 通过完整测试验证修复的有效性
+
 ### 🎯 **REVISED PRIORITY ORDER**
 1. **Priority 1**: Complete core system integration (Item 9-10)
 2. **Priority 2**: Implement standalone analysis mode (Item 10)
