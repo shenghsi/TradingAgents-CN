@@ -939,89 +939,30 @@ def run_market_narrative_analysis():
         console.print("\n[green]🚀 开始市场叙事分析...[/green]")
         
         try:
-            # 导入叙事分析师
-            from tradingagents.agents.analysts.narrative_analyst import create_narrative_analyst
-            from tradingagents.agents.utils.agent_utils import Toolkit
+            # 使用图形工作流进行叙事分析，确保工具调用通过LangChain机制
+            console.print("[yellow]使用图形工作流执行叙事分析...[/yellow]")
             
-            # 创建工具包
-            toolkit = Toolkit()
+            # 创建图形工作流，只包含叙事分析师
+            graph = TradingAgentsGraph(["narrative"], config=config, debug=False)
             
-            # 创建LLM实例
-            if llm_provider == "dashscope":
-                from tradingagents.llm_adapters import ChatDashScopeOpenAI
-                llm_instance = ChatDashScopeOpenAI(
-                    model=llm_model,
-                    api_key=os.getenv("DASHSCOPE_API_KEY"),
-                    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-                )
-            elif llm_provider == "deepseek":
-                from tradingagents.llm.deepseek_adapter import DeepSeekAdapter
-                llm_instance = DeepSeekAdapter(
-                    model_name=llm_model,
-                    api_key=os.getenv("DEEPSEEK_API_KEY")
-                )
-            else:
-                # 默认使用dashscope
-                from tradingagents.llm_adapters import ChatDashScopeOpenAI
-                llm_instance = ChatDashScopeOpenAI(
-                    model=llm_model,
-                    api_key=os.getenv("DASHSCOPE_API_KEY"),
-                    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-                )
+            # 使用一个虚拟的股票代码来触发图形工作流
+            # 图形工作流会识别这是叙事分析并正确处理
+            virtual_symbol = "MARKET_NARRATIVE"
             
-            # 创建叙事分析师
-            from tradingagents.agents.analysts.narrative_analyst import NarrativeAnalyst
-            narrative_analyst = NarrativeAnalyst(llm_instance, toolkit)
+            console.print(f"[blue]使用图形工作流执行叙事分析[/blue]")
+            console.print(f"[blue]虚拟股票代码: {virtual_symbol}[/blue]")
+            console.print(f"[blue]分析日期: {analysis_date}[/blue]")
             
-            # 创建初始状态
-            initial_state = {
-                "messages": [("human", "Analyze the current US market narrative and trends")],
-                "company_of_interest": "MARKET_NARRATIVE",
-                "trade_date": analysis_date,
-                "narrative_report": ""
-            }
+            # 通过图形工作流执行分析
+            state, decision = graph.propagate(virtual_symbol, analysis_date)
             
-            # 直接调用叙事分析师
-            console.print("[yellow]执行叙事分析...[/yellow]")
-            result = narrative_analyst.analyze_market(analysis_date)
+            # 提取叙事报告
+            narrative_report = state.get("narrative_report", "叙事分析完成，但未生成报告。")
             
-            # 提取结果
-            if "narrative_report" in result:
-                narrative_report = result["narrative_report"]
-            else:
-                narrative_report = "叙事分析完成，但未生成报告。"
-            
-            # 创建简化的状态和决策
-            state = {
-                "narrative_report": narrative_report,
-                "market_report": "",
-                "fundamentals_report": "",
-                "sentiment_report": "",
-                "news_report": "",
-                "investment_plan": "",
-                "trader_investment_plan": "",
-                "final_trade_decision": "基于叙事分析的市场建议"
-            }
-            
-            # 从叙事报告中提取决策信息
-            decision = {
-                "action": "持有",  # 默认值
-                "confidence": 0.7,
-                "risk_score": 0.5,
-                "target_price": None,
-                "reasoning": narrative_report
-            }
-            
-            # 尝试从报告中提取投资建议
-            if "买入" in narrative_report or "BUY" in narrative_report.upper():
-                decision["action"] = "买入"
-            elif "卖出" in narrative_report or "SELL" in narrative_report.upper():
-                decision["action"] = "卖出"
-            
-            console.print("[green]✅ 独立叙事分析完成[/green]")
+            console.print("[green]✅ 图形工作流叙事分析完成[/green]")
             
         except Exception as e:
-            console.print(f"[red]❌ 独立叙事分析失败: {str(e)}[/red]")
+            console.print(f"[red]❌ 图形工作流叙事分析失败: {str(e)}[/red]")
             console.print("[yellow]保持独立叙事分析模式，返回错误信息...[/yellow]")
             
             # 纯叙事分析失败时，返回错误信息而不是回退到图形工作流
