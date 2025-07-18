@@ -125,8 +125,9 @@ The new analyst will provide insights into the current market narrative and tren
 ### ✅ **COMPLETED (Phase 2.5 - Critical Fix)**
 - **独立叙事分析模式**: 修复当只选择narrative analyst时仍然通过完整图形工作流的问题
 - **直接调用模式**: 实现纯叙事分析时直接调用叙事分析师，避免不必要的其他分析师参与
-- **回退机制**: 如果独立模式失败，自动回退到图形工作流模式
-- **Web和CLI同步**: 同时更新Web界面和CLI的叙事分析逻辑
+- **错误处理优化**: 修复独立模式失败时错误地回退到图形工作流的问题，现在保持独立模式并返回清晰的错误信息
+- **Web和CLI同步**: 同时更新Web界面和CLI的叙事分析逻辑，确保一致性
+- **用户体验改进**: 当用户选择纯叙事分析时，系统始终保持在独立模式，不会意外启动完整的多代理系统
 
 ### 🎯 **REVISED PRIORITY ORDER**
 1. **Priority 1**: Complete core system integration (Item 9-10)

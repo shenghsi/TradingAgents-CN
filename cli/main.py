@@ -1021,11 +1021,31 @@ def run_market_narrative_analysis():
             
         except Exception as e:
             console.print(f"[red]❌ 独立叙事分析失败: {str(e)}[/red]")
-            console.print("[yellow]回退到图形工作流模式...[/yellow]")
+            console.print("[yellow]保持独立叙事分析模式，返回错误信息...[/yellow]")
             
-            # 回退到图形工作流
-            graph = TradingAgentsGraph(analysts, config=config, debug=False)
-            state, decision = graph.propagate("MARKET_NARRATIVE", analysis_date)
+            # 纯叙事分析失败时，返回错误信息而不是回退到图形工作流
+            # 因为用户选择了纯叙事分析，应该保持这种模式
+            error_msg = f"叙事分析失败: {str(e)}"
+            
+            # 创建错误状态
+            state = {
+                "narrative_report": f"叙事分析失败: {str(e)}",
+                "market_report": "",
+                "fundamentals_report": "",
+                "sentiment_report": "",
+                "news_report": "",
+                "investment_plan": "",
+                "trader_investment_plan": "",
+                "final_trade_decision": "叙事分析失败"
+            }
+            
+            decision = {
+                "action": "持有",
+                "confidence": 0.0,
+                "risk_score": 1.0,
+                "target_price": None,
+                "reasoning": f"叙事分析失败: {str(e)}"
+            }
         
         # 显示结果
         console.print("\n[bold green]✅ 分析完成！[/bold green]\n")

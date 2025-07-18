@@ -376,9 +376,30 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
                 
             except Exception as e:
                 print(f"🔍 [DEBUG] 独立叙事分析失败: {str(e)}")
-                # 回退到图形工作流
-                graph = TradingAgentsGraph(analysts, config=config, debug=False)
-                state, decision = graph.propagate(formatted_symbol, analysis_date)
+                # 纯叙事分析失败时，返回错误信息而不是回退到图形工作流
+                # 因为用户选择了纯叙事分析，应该保持这种模式
+                error_msg = f"叙事分析失败: {str(e)}"
+                print(f"🔍 [DEBUG] 返回错误而不是回退到图形工作流")
+                
+                # 创建错误状态
+                state = {
+                    "narrative_report": f"叙事分析失败: {str(e)}",
+                    "market_report": "",
+                    "fundamentals_report": "",
+                    "sentiment_report": "",
+                    "news_report": "",
+                    "investment_plan": "",
+                    "trader_investment_plan": "",
+                    "final_trade_decision": "叙事分析失败"
+                }
+                
+                decision = {
+                    "action": "持有",
+                    "confidence": 0.0,
+                    "risk_score": 1.0,
+                    "target_price": None,
+                    "reasoning": f"叙事分析失败: {str(e)}"
+                }
         else:
             # 使用完整的图形工作流
             if is_narrative_analysis:
