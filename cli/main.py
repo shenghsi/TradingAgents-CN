@@ -938,11 +938,94 @@ def run_market_narrative_analysis():
         
         console.print("\n[green]🚀 开始市场叙事分析...[/green]")
         
-        # 初始化交易图
-        graph = TradingAgentsGraph(analysts, config=config, debug=False)
-        
-        # 执行分析
-        state, decision = graph.propagate("MARKET_NARRATIVE", analysis_date)
+        try:
+            # 导入叙事分析师
+            from tradingagents.agents.analysts.narrative_analyst import create_narrative_analyst
+            from tradingagents.agents.utils.agent_utils import Toolkit
+            
+            # 创建工具包
+            toolkit = Toolkit()
+            
+            # 创建LLM实例
+            if llm_provider == "dashscope":
+                from tradingagents.llm_adapters.dashscope_openai_adapter import DashScopeOpenAIAdapter
+                llm_instance = DashScopeOpenAIAdapter(
+                    model_name=llm_model,
+                    api_key=os.getenv("DASHSCOPE_API_KEY"),
+                    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+                )
+            elif llm_provider == "deepseek":
+                from tradingagents.llm.deepseek_adapter import DeepSeekAdapter
+                llm_instance = DeepSeekAdapter(
+                    model_name=llm_model,
+                    api_key=os.getenv("DEEPSEEK_API_KEY")
+                )
+            else:
+                # 默认使用dashscope
+                from tradingagents.llm_adapters.dashscope_openai_adapter import DashScopeOpenAIAdapter
+                llm_instance = DashScopeOpenAIAdapter(
+                    model_name=llm_model,
+                    api_key=os.getenv("DASHSCOPE_API_KEY"),
+                    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+                )
+            
+            # 创建叙事分析师
+            narrative_analyst = create_narrative_analyst(llm_instance, toolkit)
+            
+            # 创建初始状态
+            initial_state = {
+                "messages": [("human", "Analyze the current US market narrative and trends")],
+                "company_of_interest": "MARKET_NARRATIVE",
+                "trade_date": analysis_date,
+                "narrative_report": ""
+            }
+            
+            # 直接调用叙事分析师
+            console.print("[yellow]执行叙事分析...[/yellow]")
+            result = narrative_analyst.invoke(initial_state)
+            
+            # 提取结果
+            if "narrative_report" in result:
+                narrative_report = result["narrative_report"]
+            else:
+                narrative_report = "叙事分析完成，但未生成报告。"
+            
+            # 创建简化的状态和决策
+            state = {
+                "narrative_report": narrative_report,
+                "market_report": "",
+                "fundamentals_report": "",
+                "sentiment_report": "",
+                "news_report": "",
+                "investment_plan": "",
+                "trader_investment_plan": "",
+                "final_trade_decision": "基于叙事分析的市场建议"
+            }
+            
+            # 从叙事报告中提取决策信息
+            decision = {
+                "action": "持有",  # 默认值
+                "confidence": 0.7,
+                "risk_score": 0.5,
+                "target_price": None,
+                "reasoning": narrative_report
+            }
+            
+            # 尝试从报告中提取投资建议
+            if "买入" in narrative_report or "BUY" in narrative_report.upper():
+                decision["action"] = "买入"
+            elif "卖出" in narrative_report or "SELL" in narrative_report.upper():
+                decision["action"] = "卖出"
+            
+            console.print("[green]✅ 独立叙事分析完成[/green]")
+            
+        except Exception as e:
+            console.print(f"[red]❌ 独立叙事分析失败: {str(e)}[/red]")
+            console.print("[yellow]回退到图形工作流模式...[/yellow]")
+            
+            # 回退到图形工作流
+            graph = TradingAgentsGraph(analysts, config=config, debug=False)
+            state, decision = graph.propagate("MARKET_NARRATIVE", analysis_date)
         
         # 显示结果
         console.print("\n[bold green]✅ 分析完成！[/bold green]\n")

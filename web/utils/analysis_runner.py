@@ -284,20 +284,115 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
 
         # 初始化交易图
         update_progress("初始化分析引擎...")
-        graph = TradingAgentsGraph(analysts, config=config, debug=False)
-
-        # 执行分析
-        if is_narrative_analysis:
-            update_progress("开始市场叙事分析，这可能需要几分钟时间...")
-        else:
-            update_progress(f"开始分析 {formatted_symbol} 股票，这可能需要几分钟时间...")
         
-        print(f"🔍 [RUNNER DEBUG] ===== 调用graph.propagate =====")
-        print(f"🔍 [RUNNER DEBUG] 传递给graph.propagate的参数:")
-        print(f"🔍 [RUNNER DEBUG]   symbol: '{formatted_symbol}'")
-        print(f"🔍 [RUNNER DEBUG]   date: '{analysis_date}'")
-
-        state, decision = graph.propagate(formatted_symbol, analysis_date)
+        # 检查是否为纯叙事分析模式（只有narrative analyst）
+        is_pure_narrative = len(analysts) == 1 and "narrative" in analysts
+        
+        if is_pure_narrative:
+            # 纯叙事分析模式 - 直接调用叙事分析师
+            update_progress("启动独立叙事分析模式...")
+            
+            try:
+                # 导入叙事分析师
+                from tradingagents.agents.analysts.narrative_analyst import create_narrative_analyst
+                from tradingagents.agents.utils.agent_utils import Toolkit
+                
+                # 创建工具包
+                toolkit = Toolkit()
+                
+                # 创建LLM实例
+                if llm_provider == "dashscope":
+                    from tradingagents.llm_adapters.dashscope_openai_adapter import DashScopeOpenAIAdapter
+                    llm_instance = DashScopeOpenAIAdapter(
+                        model_name=llm_model,
+                        api_key=os.getenv("DASHSCOPE_API_KEY"),
+                        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+                    )
+                elif llm_provider == "deepseek":
+                    from tradingagents.llm.deepseek_adapter import DeepSeekAdapter
+                    llm_instance = DeepSeekAdapter(
+                        model_name=llm_model,
+                        api_key=os.getenv("DEEPSEEK_API_KEY")
+                    )
+                else:
+                    # 默认使用dashscope
+                    from tradingagents.llm_adapters.dashscope_openai_adapter import DashScopeOpenAIAdapter
+                    llm_instance = DashScopeOpenAIAdapter(
+                        model_name=llm_model,
+                        api_key=os.getenv("DASHSCOPE_API_KEY"),
+                        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+                    )
+                
+                # 创建叙事分析师
+                narrative_analyst = create_narrative_analyst(llm_instance, toolkit)
+                
+                # 创建初始状态
+                initial_state = {
+                    "messages": [("human", "Analyze the current US market narrative and trends")],
+                    "company_of_interest": "MARKET_NARRATIVE",
+                    "trade_date": analysis_date,
+                    "narrative_report": ""
+                }
+                
+                # 直接调用叙事分析师
+                update_progress("执行叙事分析...")
+                result = narrative_analyst.invoke(initial_state)
+                
+                # 提取结果
+                if "narrative_report" in result:
+                    narrative_report = result["narrative_report"]
+                else:
+                    narrative_report = "叙事分析完成，但未生成报告。"
+                
+                # 创建简化的状态和决策
+                state = {
+                    "narrative_report": narrative_report,
+                    "market_report": "",
+                    "fundamentals_report": "",
+                    "sentiment_report": "",
+                    "news_report": "",
+                    "investment_plan": "",
+                    "trader_investment_plan": "",
+                    "final_trade_decision": "基于叙事分析的市场建议"
+                }
+                
+                # 从叙事报告中提取决策信息
+                decision = {
+                    "action": "持有",  # 默认值
+                    "confidence": 0.7,
+                    "risk_score": 0.5,
+                    "target_price": None,
+                    "reasoning": narrative_report
+                }
+                
+                # 尝试从报告中提取投资建议
+                if "买入" in narrative_report or "BUY" in narrative_report.upper():
+                    decision["action"] = "买入"
+                elif "卖出" in narrative_report or "SELL" in narrative_report.upper():
+                    decision["action"] = "卖出"
+                
+                print(f"🔍 [DEBUG] 独立叙事分析完成")
+                print(f"🔍 [DEBUG] 叙事报告长度: {len(narrative_report)}")
+                
+            except Exception as e:
+                print(f"🔍 [DEBUG] 独立叙事分析失败: {str(e)}")
+                # 回退到图形工作流
+                graph = TradingAgentsGraph(analysts, config=config, debug=False)
+                state, decision = graph.propagate(formatted_symbol, analysis_date)
+        else:
+            # 使用完整的图形工作流
+            if is_narrative_analysis:
+                update_progress("开始市场叙事分析，这可能需要几分钟时间...")
+            else:
+                update_progress(f"开始分析 {formatted_symbol} 股票，这可能需要几分钟时间...")
+            
+            print(f"🔍 [RUNNER DEBUG] ===== 调用graph.propagate =====")
+            print(f"🔍 [RUNNER DEBUG] 传递给graph.propagate的参数:")
+            print(f"🔍 [RUNNER DEBUG]   symbol: '{formatted_symbol}'")
+            print(f"🔍 [RUNNER DEBUG]   date: '{analysis_date}'")
+            
+            graph = TradingAgentsGraph(analysts, config=config, debug=False)
+            state, decision = graph.propagate(formatted_symbol, analysis_date)
 
         # 调试信息
         print(f"🔍 [DEBUG] 分析完成，decision类型: {type(decision)}")
