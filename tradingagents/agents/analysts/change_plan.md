@@ -1,21 +1,22 @@
 ### CHANGE PLAN
 
-**Objective:** Develop a new analyst focused on analyzing the short-term narrative/focus and long-term trends of the current US stock market, leveraging insights from top companies and VCs investments, acquisitions, and major market trends using free data sources. **The analyst works WITHOUT ticker input and provides specific buy/sell recommendations based on market analysis.**
+**Objective:** Develop a new "narrative analyst" focused on analyzing the short-term narrative/focus and long-term trends of the current US stock market, leveraging insights from top companies and VCs investments, acquisitions, and major market trends using free data sources. **The analyst works WITHOUT ticker input and provides specific buy/sell recommendations based on market analysis.**
 
 #### Files to be Modified or Created:
-- `tradingagents/agents/analysts/narrative_trend_analyst.py` (New)
-- `tradingagents/dataflows/investment_data_utils.py` (New)
-- `tradingagents/dataflows/trend_analysis_utils.py` (New)
-- `tradingagents/config/api_keys.py` (Update for new API keys)
+- `tradingagents/agents/analysts/narrative_analyst.py` (New) ✅
+- `tradingagents/dataflows/investment_data_utils.py` (New) ✅
+- `tradingagents/dataflows/trend_analysis_utils.py` (New) ✅
+- `tradingagents/config/api_keys.py` (Update for new API keys) ✅
 
 #### Rationale:
 The new analyst will provide insights into the current market narrative and trends by analyzing data from top financial media, upcoming financial events, sector performance, and investment activities of top companies and VCs. This will help in identifying the driving forces behind market movements and provide actionable insights for investors.
 
 ### IMPLEMENTATION CHECKLIST
 
+#### PHASE 1: CORE IMPLEMENTATION ✅ COMPLETED
 1. **Create New Analyst Class:**
-   - [x] Create `narrative_trend_analyst.py` in the analysts directory.
-   - [x] Implement a class `NarrativeTrendAnalyst` with methods for data collection, analysis, and report generation.
+   - [x] Create `narrative_analyst.py` in the analysts directory.
+   - [x] Implement a class `NarrativeAnalyst` with methods for data collection, analysis, and report generation.
 
 2. **Data Collection:**
    - [x] Develop `investment_data_utils.py` to fetch data on investments and acquisitions using free APIs like Yahoo Finance and Google Finance.
@@ -34,7 +35,7 @@ The new analyst will provide insights into the current market narrative and tren
    - [x] Develop methods to identify the current position in the trend cycle.
 
 6. **Report Generation:**
-   - [x] Define report templates in `narrative_trend_analyst.py` to present findings on market narrative, trends, and investment recommendations.
+   - [x] Define report templates in `narrative_analyst.py` to present findings on market narrative, trends, and investment recommendations.
    - [x] Ensure reports include sections for short-term narrative/focus, long-term trend analysis, and stock recommendations.
 
 7. **Testing and Validation:**
@@ -45,65 +46,101 @@ The new analyst will provide insights into the current market narrative and tren
    - [x] Update project documentation to include details about the new analyst and its capabilities.
    - [x] Provide usage examples and API documentation for new utilities.
 
-9. **System Integration:**
-   - [ ] Add narrative trend analyst import to `tradingagents/agents/__init__.py`
-   - [ ] Update `create_narrative_trend_analyst` function export in agents module
-   - [ ] Integrate with existing TradingAgentsGraph workflow
-   - [ ] Add to available analysts list in graph propagation logic
+#### PHASE 2: SYSTEM INTEGRATION 🔄 IN PROGRESS
+9. **Core System Integration:**
+   - [ ] Add narrative analyst import to `tradingagents/agents/__init__.py`
+   - [ ] Update `create_narrative_analyst` function export in agents module
+   - [ ] Add narrative analyst to available analysts list in `tradingagents/graph/setup.py`
+   - [ ] Update `tradingagents/graph/trading_graph.py` to support narrative analyst selection
+   - [ ] Add narrative analyst to tool nodes configuration
 
-10. **Web Interface Integration:**
-    - [ ] Add "叙述趋势分析师" option to Web interface analyst selection
-    - [ ] Create dedicated "市场概览" page in Web interface for ticker-free analysis
-    - [ ] Update `web/components/analysis_form.py` to include new analyst option
-    - [ ] Add market overview functionality to sidebar navigation
+10. **Standalone Analysis Mode:**
+    - [ ] Create standalone analysis function that bypasses ticker requirement
+    - [ ] Implement direct analyst invocation without graph workflow
+    - [ ] Add market narrative analysis entry point
+    - [ ] Create simplified analysis pipeline for ticker-free analysis
 
-11. **CLI Interface Integration:**
-    - [ ] Add narrative trend analyst to CLI analyst selection options
-    - [ ] Create "market-overview" command for ticker-free analysis
-    - [ ] Update CLI help documentation to include new analyst
+#### PHASE 3: USER INTERFACE INTEGRATION 📋 PLANNED
+11. **Web Interface Integration:**
+    - [ ] Add "叙事分析师" to the analyst section.
+    - [ ] Add dedicated route for ticker-free analysis in `web/app.py` to allow analyze without specifying the ticker.
+    - [ ] Create new analysis form component for market narrative.
+    - [ ] When a ticker is specified and the narrative analyst is selected,the narrative analyst report should be included for the analysis of the particular ticker.
+    - [ ] Update `web/components/analysis_form.py` to include market narrative option
+
+12. **CLI Interface Integration:**
+    - [ ] Add "market-narrative" command to CLI in `cli/main.py`
+    - [ ] Create dedicated market analysis function for CLI
+    - [ ] Update CLI help documentation to include new command
     - [ ] Add usage examples in CLI welcome messages
+    - [ ] Create interactive market analysis mode
 
-12. **Testing and Validation (Comprehensive):**
-    - [ ] Create `test_narrative_trend_analyst.py` with comprehensive unit tests
-    - [ ] Test integration with existing analyst workflow
-    - [ ] Validate ticker-free analysis functionality
+#### PHASE 4: TESTING AND VALIDATION 🧪 PLANNED
+13. **Comprehensive Testing:**
+    - [ ] Create `test_narrative_analyst.py` with comprehensive unit tests
+    - [ ] Test standalone analysis functionality
     - [ ] Test Web interface integration
     - [ ] Test CLI interface integration
     - [ ] Performance testing for data fetching and processing
+    - [ ] Integration testing with existing analyst workflow
 
-13. **Documentation Updates:**
-     - [ ] Update main README.md to include narrative trend analyst
+14. **Documentation Updates:**
+     - [ ] Update main README.md to include narrative analyst
      - [ ] Add usage guide for ticker-free market analysis
      - [ ] Update Web interface documentation
      - [ ] Update CLI documentation with new commands
      - [ ] Add examples in `examples/` directory
+     - [ ] Create comprehensive API documentation
 
 ---
 
 ## CURRENT STATUS
 
 ### ✅ **COMPLETED (Phase 1)**
-- Core analyst implementation with `NarrativeTrendAnalyst` class
+- Core analyst implementation with `NarrativeAnalyst` class
 - Data collection utilities (`investment_data_utils.py`, `trend_analysis_utils.py`)
 - Market analysis functionality working without ticker input
 - Buy/sell recommendations based on market narrative
 - Basic testing and documentation
 
 ### 🔄 **IN PROGRESS (Phase 2)**
-- System integration tasks (Items 9-13)
+- Core system integration tasks (Item 9-10)
+- Standalone analysis mode implementation
+- Graph workflow integration
+
+### 📋 **PLANNED (Phase 3)**
 - User interface integration (Web and CLI)
+- New market overview functionality
+- Enhanced user experience
+
+### 🧪 **PLANNED (Phase 4)**
 - Comprehensive testing and validation
 - Complete documentation updates
+- Performance optimization
 
-### 🎯 **NEXT STEPS**
-1. **Priority 1**: Complete system integration (Item 9)
-2. **Priority 2**: Add Web interface options (Item 10)
-3. **Priority 3**: Update CLI interface (Item 11)
-4. **Priority 4**: Comprehensive testing (Item 12)
-5. **Priority 5**: Documentation updates (Item 13)
+### 🎯 **REVISED PRIORITY ORDER**
+1. **Priority 1**: Complete core system integration (Item 9-10)
+2. **Priority 2**: Implement standalone analysis mode (Item 10)
+3. **Priority 3**: Create Web interface market overview (Item 11)
+4. **Priority 4**: Add CLI market overview command (Item 12)
+5. **Priority 5**: Comprehensive testing (Item 13-14)
 
-### 📝 **NOTES**
-- The core functionality is implemented and working
-- Main blocker is lack of integration with existing user interfaces
-- Users cannot currently access the new analyst through standard workflows
-- Need to create ticker-free analysis entry points in both Web and CLI
+### 📝 **KEY INSIGHTS FROM RESEARCH**
+- **Architecture Complexity**: The existing graph workflow is more complex than initially estimated
+- **Ticker-Free Analysis**: Requires special handling as existing interfaces are ticker-centric
+- **Integration Strategy**: Need to implement both graph integration AND standalone mode
+- **User Experience**: Should provide both integrated workflow and dedicated market analysis entry points
+- **Testing Approach**: Need comprehensive testing for both standalone and integrated modes
+
+### 🚧 **TECHNICAL CHALLENGES IDENTIFIED**
+1. **Graph Workflow Integration**: Existing setup.py needs modification to support narrative analyst
+2. **Tool Node Configuration**: Need to add appropriate tools for narrative analysis
+3. **State Management**: Narrative analyst doesn't require ticker in state
+4. **Web Interface**: Current form design is ticker-specific, needs new market overview page
+5. **CLI Integration**: Existing CLI structure is ticker-focused, needs new command structure
+
+### 💡 **RECOMMENDED APPROACH**
+1. **Dual Mode Implementation**: Support both integrated graph workflow AND standalone analysis
+2. **Progressive Integration**: Start with standalone mode, then add graph integration
+3. **User-Centric Design**: Create dedicated market overview interfaces for better UX
+4. **Comprehensive Testing**: Test both modes thoroughly before full deployment
