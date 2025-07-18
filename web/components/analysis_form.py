@@ -99,6 +99,12 @@ def render_analysis_form():
                 value=False,
                 help="分析社交媒体情绪、投资者情绪指标"
             )
+            
+            narrative_analyst = st.checkbox(
+                "📊 叙事分析师",
+                value=False,
+                help="分析市场叙事趋势，提供买卖建议"
+            )
         
         with col2:
             news_analyst = st.checkbox(
@@ -121,6 +127,8 @@ def render_analysis_form():
             selected_analysts.append(("social", "社交媒体分析师"))
         if news_analyst:
             selected_analysts.append(("news", "新闻分析师"))
+        if narrative_analyst:
+            selected_analysts.append(("narrative", "叙事分析师"))
         if fundamentals_analyst:
             selected_analysts.append(("fundamentals", "基本面分析师"))
         
@@ -151,9 +159,11 @@ def render_analysis_form():
             )
 
         # 显示输入状态提示
-        if not stock_symbol:
+        if not stock_symbol and not narrative_analyst:
             st.info("💡 请在上方输入股票代码，输入完成后按回车键确认")
-        else:
+        elif narrative_analyst and not stock_symbol:
+            st.info("💡 已选择叙事分析师，将进行市场趋势分析（无需股票代码）")
+        elif stock_symbol:
             st.success(f"✅ 已输入股票代码: {stock_symbol}")
 
         # 添加JavaScript来改善用户体验
@@ -185,7 +195,7 @@ def render_analysis_form():
         )
 
     # 只有在提交时才返回数据
-    if submitted and stock_symbol:  # 确保有股票代码才提交
+    if submitted and (stock_symbol or narrative_analyst):  # 允许无ticker的叙事分析
         # 添加详细日志
         print(f"🔍 [FORM DEBUG] ===== 分析表单提交 =====")
         print(f"🔍 [FORM DEBUG] 用户输入的股票代码: '{stock_symbol}'")
@@ -210,10 +220,10 @@ def render_analysis_form():
         print(f"🔍 [FORM DEBUG] ===== 表单提交结束 =====")
 
         return form_data
-    elif submitted and not stock_symbol:
-        # 用户点击了提交但没有输入股票代码
-        print(f"🔍 [FORM DEBUG] 提交失败：股票代码为空")
-        st.error("❌ 请输入股票代码后再提交")
+    elif submitted and not stock_symbol and not narrative_analyst:
+        # 用户点击了提交但没有输入股票代码且没有选择叙事分析师
+        print(f"🔍 [FORM DEBUG] 提交失败：股票代码为空且未选择叙事分析师")
+        st.error("❌ 请输入股票代码或选择叙事分析师后再提交")
         return {'submitted': False}
     else:
         return {'submitted': False}

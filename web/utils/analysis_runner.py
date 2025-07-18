@@ -92,7 +92,7 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
     """执行股票分析
 
     Args:
-        stock_symbol: 股票代码
+        stock_symbol: 股票代码（可以为空，用于叙事分析）
         analysis_date: 分析日期
         analysts: 分析师列表
         research_depth: 研究深度
@@ -117,7 +117,13 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
     print(f"🔍 [RUNNER DEBUG] LLM模型: '{llm_model}'")
     print(f"🔍 [RUNNER DEBUG] 研究深度: {research_depth}")
 
-    update_progress("开始股票分析...")
+    # 检查是否为叙事分析模式
+    is_narrative_analysis = "narrative" in analysts and not stock_symbol
+    if is_narrative_analysis:
+        update_progress("开始市场叙事分析...")
+        print(f"🔍 [RUNNER DEBUG] 检测到叙事分析模式，无需股票代码")
+    else:
+        update_progress("开始股票分析...")
 
     # 生成会话ID用于Token跟踪
     session_id = f"analysis_{uuid.uuid4().hex[:8]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -243,38 +249,49 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
         print(f"股票代码: {stock_symbol}")
         print(f"分析日期: {analysis_date}")
 
-        # 根据市场类型调整股票代码格式
-        print(f"🔍 [RUNNER DEBUG] ===== 股票代码格式化 =====")
-        print(f"🔍 [RUNNER DEBUG] 原始股票代码: '{stock_symbol}'")
-        print(f"🔍 [RUNNER DEBUG] 市场类型: '{market_type}'")
-
-        if market_type == "A股":
-            # A股代码不需要特殊处理，保持原样
-            formatted_symbol = stock_symbol
-            print(f"🔍 [RUNNER DEBUG] A股代码保持原样: '{formatted_symbol}'")
-            update_progress(f"准备分析A股: {formatted_symbol}")
-        elif market_type == "港股":
-            # 港股代码转为大写，确保.HK后缀
-            formatted_symbol = stock_symbol.upper()
-            if not formatted_symbol.endswith('.HK'):
-                # 如果是纯数字，添加.HK后缀
-                if formatted_symbol.isdigit():
-                    formatted_symbol = f"{formatted_symbol.zfill(4)}.HK"
-            update_progress(f"准备分析港股: {formatted_symbol}")
+        # 处理股票代码格式
+        if is_narrative_analysis:
+            # 叙事分析模式，使用占位符
+            formatted_symbol = "MARKET_NARRATIVE"
+            update_progress("准备进行市场叙事分析...")
+            print(f"🔍 [RUNNER DEBUG] 叙事分析模式，使用占位符: '{formatted_symbol}'")
         else:
-            # 美股代码转为大写
-            formatted_symbol = stock_symbol.upper()
-            print(f"🔍 [RUNNER DEBUG] 美股代码转大写: '{stock_symbol}' -> '{formatted_symbol}'")
-            update_progress(f"准备分析美股: {formatted_symbol}")
+            # 根据市场类型调整股票代码格式
+            print(f"🔍 [RUNNER DEBUG] ===== 股票代码格式化 =====")
+            print(f"🔍 [RUNNER DEBUG] 原始股票代码: '{stock_symbol}'")
+            print(f"🔍 [RUNNER DEBUG] 市场类型: '{market_type}'")
 
-        print(f"🔍 [RUNNER DEBUG] 最终传递给分析引擎的股票代码: '{formatted_symbol}'")
+            if market_type == "A股":
+                # A股代码不需要特殊处理，保持原样
+                formatted_symbol = stock_symbol
+                print(f"🔍 [RUNNER DEBUG] A股代码保持原样: '{formatted_symbol}'")
+                update_progress(f"准备分析A股: {formatted_symbol}")
+            elif market_type == "港股":
+                # 港股代码转为大写，确保.HK后缀
+                formatted_symbol = stock_symbol.upper()
+                if not formatted_symbol.endswith('.HK'):
+                    # 如果是纯数字，添加.HK后缀
+                    if formatted_symbol.isdigit():
+                        formatted_symbol = f"{formatted_symbol.zfill(4)}.HK"
+                update_progress(f"准备分析港股: {formatted_symbol}")
+            else:
+                # 美股代码转为大写
+                formatted_symbol = stock_symbol.upper()
+                print(f"🔍 [RUNNER DEBUG] 美股代码转大写: '{stock_symbol}' -> '{formatted_symbol}'")
+                update_progress(f"准备分析美股: {formatted_symbol}")
+
+            print(f"🔍 [RUNNER DEBUG] 最终传递给分析引擎的股票代码: '{formatted_symbol}'")
 
         # 初始化交易图
         update_progress("初始化分析引擎...")
         graph = TradingAgentsGraph(analysts, config=config, debug=False)
 
         # 执行分析
-        update_progress(f"开始分析 {formatted_symbol} 股票，这可能需要几分钟时间...")
+        if is_narrative_analysis:
+            update_progress("开始市场叙事分析，这可能需要几分钟时间...")
+        else:
+            update_progress(f"开始分析 {formatted_symbol} 股票，这可能需要几分钟时间...")
+        
         print(f"🔍 [RUNNER DEBUG] ===== 调用graph.propagate =====")
         print(f"🔍 [RUNNER DEBUG] 传递给graph.propagate的参数:")
         print(f"🔍 [RUNNER DEBUG]   symbol: '{formatted_symbol}'")
@@ -432,6 +449,7 @@ def format_analysis_results(results):
         'fundamentals_report', 
         'sentiment_report',
         'news_report',
+        'narrative_report',
         'risk_assessment',
         'investment_plan'
     ]
@@ -469,41 +487,45 @@ def validate_analysis_params(stock_symbol, analysis_date, analysts, research_dep
 
     errors = []
 
-    # 验证股票代码
-    if not stock_symbol or len(stock_symbol.strip()) == 0:
-        errors.append("股票代码不能为空")
-    elif len(stock_symbol.strip()) > 10:
-        errors.append("股票代码长度不能超过10个字符")
-    else:
-        # 根据市场类型验证代码格式
-        symbol = stock_symbol.strip()
-        if market_type == "A股":
-            # A股：6位数字
-            import re
-            if not re.match(r'^\d{6}$', symbol):
-                errors.append("A股代码格式错误，应为6位数字（如：000001）")
-        elif market_type == "港股":
-            # 港股：4-5位数字.HK 或 纯4-5位数字
-            import re
-            symbol_upper = symbol.upper()
-            # 检查是否为 XXXX.HK 或 XXXXX.HK 格式
-            hk_format = re.match(r'^\d{4,5}\.HK$', symbol_upper)
-            # 检查是否为纯4-5位数字格式
-            digit_format = re.match(r'^\d{4,5}$', symbol)
+    # 检查是否为叙事分析模式
+    is_narrative_analysis = "narrative" in analysts and not stock_symbol
+    
+    # 验证股票代码（叙事分析模式除外）
+    if not is_narrative_analysis:
+        if not stock_symbol or len(stock_symbol.strip()) == 0:
+            errors.append("股票代码不能为空")
+        elif len(stock_symbol.strip()) > 10:
+            errors.append("股票代码长度不能超过10个字符")
+        else:
+            # 根据市场类型验证代码格式
+            symbol = stock_symbol.strip()
+            if market_type == "A股":
+                # A股：6位数字
+                import re
+                if not re.match(r'^\d{6}$', symbol):
+                    errors.append("A股代码格式错误，应为6位数字（如：000001）")
+            elif market_type == "港股":
+                # 港股：4-5位数字.HK 或 纯4-5位数字
+                import re
+                symbol_upper = symbol.upper()
+                # 检查是否为 XXXX.HK 或 XXXXX.HK 格式
+                hk_format = re.match(r'^\d{4,5}\.HK$', symbol_upper)
+                # 检查是否为纯4-5位数字格式
+                digit_format = re.match(r'^\d{4,5}$', symbol)
 
-            if not (hk_format or digit_format):
-                errors.append("港股代码格式错误，应为4位数字.HK（如：0700.HK）或4位数字（如：0700）")
-        elif market_type == "美股":
-            # 美股：1-5位字母
-            import re
-            if not re.match(r'^[A-Z]{1,5}$', symbol.upper()):
-                errors.append("美股代码格式错误，应为1-5位字母（如：AAPL）")
+                if not (hk_format or digit_format):
+                    errors.append("港股代码格式错误，应为4位数字.HK（如：0700.HK）或4位数字（如：0700）")
+            elif market_type == "美股":
+                # 美股：1-5位字母
+                import re
+                if not re.match(r'^[A-Z]{1,5}$', symbol.upper()):
+                    errors.append("美股代码格式错误，应为1-5位字母（如：AAPL）")
     
     # 验证分析师列表
     if not analysts or len(analysts) == 0:
         errors.append("必须至少选择一个分析师")
     
-    valid_analysts = ['market', 'social', 'news', 'fundamentals']
+    valid_analysts = ['market', 'social', 'news', 'narrative', 'fundamentals']
     invalid_analysts = [a for a in analysts if a not in valid_analysts]
     if invalid_analysts:
         errors.append(f"无效的分析师类型: {', '.join(invalid_analysts)}")
@@ -664,18 +686,44 @@ def generate_demo_results(stock_symbol, analysis_date, analysts, research_depth,
 ## 📰 {stock_symbol} 新闻事件分析报告
 
 ### 近期重要新闻
-1. **财报发布**: 公司发布{'超预期' if action == 'BUY' else '低于预期' if action == 'SELL' else '符合预期'}的季度财报
-2. **行业动态**: 所在行业面临{'利好' if action == 'BUY' else '挑战' if action == 'SELL' else '稳定'}政策环境
-3. **公司公告**: 管理层{'乐观' if action == 'BUY' else '谨慎' if action == 'SELL' else '稳健'}展望未来
+1. **公司公告**: {stock_symbol}发布{'利好' if action == 'BUY' else '利空' if action == 'SELL' else '中性'}公告
+2. **行业动态**: 相关行业政策{'支持' if action == 'BUY' else '限制' if action == 'SELL' else '稳定'}发展
+3. **市场反应**: 投资者对{'积极' if action == 'BUY' else '消极' if action == 'SELL' else '观望'}消息反应强烈
 
-### 新闻情绪分析
-- **正面新闻占比**: {round(random.uniform(40, 80), 0)}%
-- **负面新闻占比**: {round(random.uniform(10, 40), 0)}%
-- **中性新闻占比**: {round(random.uniform(20, 50), 0)}%
-
-### 市场影响评估
+### 影响评估
 - **短期影响**: {'正面' if action == 'BUY' else '负面' if action == 'SELL' else '中性'}
-- **长期影响**: {'积极' if action != 'SELL' else '需观察'}
+- **长期影响**: {'利好' if action == 'BUY' else '利空' if action == 'SELL' else '稳定'}
+- **风险因素**: 需要关注{'政策变化' if action == 'SELL' else '市场波动' if action == 'HOLD' else '竞争加剧'}
+
+*注意: 这是演示数据，实际分析需要配置API密钥*
+        """
+
+    if 'narrative' in analysts:
+        demo_state['narrative_report'] = f"""
+## 📊 市场叙事趋势分析报告
+
+### 当前市场叙事
+**主导主题**: {'科技股强势' if action == 'BUY' else '避险情绪升温' if action == 'SELL' else '市场观望'}
+**市场焦点**: {'AI技术突破' if action == 'BUY' else '经济不确定性' if action == 'SELL' else '政策预期'}
+
+### 短期市场趋势 (1-4周)
+- **市场情绪**: {'乐观' if action == 'BUY' else '悲观' if action == 'SELL' else '中性'}
+- **资金流向**: {'流入科技股' if action == 'BUY' else '流入防御性资产' if action == 'SELL' else '观望等待'}
+- **催化剂**: {'财报季' if action == 'BUY' else '地缘政治' if action == 'SELL' else '政策会议'}
+
+### 长期趋势分析 (3-12个月)
+- **宏观经济**: {'复苏' if action == 'BUY' else '衰退担忧' if action == 'SELL' else '稳定'}
+- **政策环境**: {'宽松' if action == 'BUY' else '紧缩' if action == 'SELL' else '中性'}
+- **技术创新**: {'加速' if action == 'BUY' else '放缓' if action == 'SELL' else '持续'}
+
+### 推荐股票
+**买入推荐**:
+- {'AAPL, MSFT, NVDA' if action == 'BUY' else 'JNJ, PG, KO' if action == 'HOLD' else 'TSLA, META, AMZN'}
+- 理由: {'受益于AI趋势' if action == 'BUY' else '防御性配置' if action == 'HOLD' else '高增长潜力'}
+
+**避免股票**:
+- {'传统能源股' if action == 'BUY' else '高估值科技股' if action == 'SELL' else '周期性股票'}
+- 理由: {'政策转向' if action == 'BUY' else '估值过高' if action == 'SELL' else '经济不确定性'}
 
 *注意: 这是演示数据，实际分析需要配置API密钥*
         """

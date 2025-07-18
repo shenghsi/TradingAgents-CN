@@ -210,6 +210,17 @@ class TradingAgentsGraph:
                     self.toolkit.get_reddit_news,
                 ]
             ),
+            "narrative": ToolNode(
+                [
+                    # online tools for market narrative analysis
+                    self.toolkit.get_realtime_stock_news,
+                    self.toolkit.get_global_news_openai,
+                    self.toolkit.get_google_news,
+                    # offline tools
+                    self.toolkit.get_finnhub_news,
+                    self.toolkit.get_reddit_news,
+                ]
+            ),
             "fundamentals": ToolNode(
                 [
                     # 统一工具
@@ -276,6 +287,7 @@ class TradingAgentsGraph:
             "market_report": final_state["market_report"],
             "sentiment_report": final_state["sentiment_report"],
             "news_report": final_state["news_report"],
+            "narrative_report": final_state["narrative_report"],
             "fundamentals_report": final_state["fundamentals_report"],
             "investment_debate_state": {
                 "bull_history": final_state["investment_debate_state"]["bull_history"],

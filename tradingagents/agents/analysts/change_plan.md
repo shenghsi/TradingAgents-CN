@@ -46,34 +46,34 @@ The new analyst will provide insights into the current market narrative and tren
    - [x] Update project documentation to include details about the new analyst and its capabilities.
    - [x] Provide usage examples and API documentation for new utilities.
 
-#### PHASE 2: SYSTEM INTEGRATION 🔄 IN PROGRESS
+#### PHASE 2: SYSTEM INTEGRATION ✅ COMPLETED
 9. **Core System Integration:**
-   - [ ] Add narrative analyst import to `tradingagents/agents/__init__.py`
-   - [ ] Update `create_narrative_analyst` function export in agents module
-   - [ ] Add narrative analyst to available analysts list in `tradingagents/graph/setup.py`
-   - [ ] Update `tradingagents/graph/trading_graph.py` to support narrative analyst selection
-   - [ ] Add narrative analyst to tool nodes configuration
+   - [x] Add narrative analyst import to `tradingagents/agents/__init__.py`
+   - [x] Update `create_narrative_analyst` function export in agents module
+   - [x] Add narrative analyst to available analysts list in `tradingagents/graph/setup.py`
+   - [x] Update `tradingagents/graph/trading_graph.py` to support narrative analyst selection
+   - [x] Add narrative analyst to tool nodes configuration
 
 10. **Standalone Analysis Mode:**
-    - [ ] Create standalone analysis function that bypasses ticker requirement
-    - [ ] Implement direct analyst invocation without graph workflow
-    - [ ] Add market narrative analysis entry point
-    - [ ] Create simplified analysis pipeline for ticker-free analysis
+    - [x] Create standalone analysis function that bypasses ticker requirement
+    - [x] Implement direct analyst invocation without graph workflow
+    - [x] Add market narrative analysis entry point
+    - [x] Create simplified analysis pipeline for ticker-free analysis
 
-#### PHASE 3: USER INTERFACE INTEGRATION 📋 PLANNED
+#### PHASE 3: USER INTERFACE INTEGRATION ✅ COMPLETED
 11. **Web Interface Integration:**
-    - [ ] Add "叙事分析师" to the analyst section.
-    - [ ] Add dedicated route for ticker-free analysis in `web/app.py` to allow analyze without specifying the ticker.
-    - [ ] Create new analysis form component for market narrative.
-    - [ ] When a ticker is specified and the narrative analyst is selected,the narrative analyst report should be included for the analysis of the particular ticker.
-    - [ ] Update `web/components/analysis_form.py` to include market narrative option
+    - [x] Add "叙事分析师" to the analyst section.
+    - [x] Add dedicated route for ticker-free analysis in `web/app.py` to allow analyze without specifying the ticker.
+    - [x] Create new analysis form component for market narrative.
+    - [x] When a ticker is specified and the narrative analyst is selected,the narrative analyst report should be included for the analysis of the particular ticker.
+    - [x] Update `web/components/analysis_form.py` to include market narrative option
 
 12. **CLI Interface Integration:**
-    - [ ] Add "market-narrative" command to CLI in `cli/main.py`
-    - [ ] Create dedicated market analysis function for CLI
-    - [ ] Update CLI help documentation to include new command
-    - [ ] Add usage examples in CLI welcome messages
-    - [ ] Create interactive market analysis mode
+    - [x] Add "market-narrative" command to CLI in `cli/main.py`
+    - [x] Create dedicated market analysis function for CLI
+    - [x] Update CLI help documentation to include new command
+    - [x] Add usage examples in CLI welcome messages
+    - [x] Create interactive market analysis mode
 
 #### PHASE 4: TESTING AND VALIDATION 🧪 PLANNED
 13. **Comprehensive Testing:**
@@ -103,15 +103,19 @@ The new analyst will provide insights into the current market narrative and tren
 - Buy/sell recommendations based on market narrative
 - Basic testing and documentation
 
-### 🔄 **IN PROGRESS (Phase 2)**
-- Core system integration tasks (Item 9-10)
+### ✅ **COMPLETED (Phase 2)**
+- Core system integration with graph workflow
 - Standalone analysis mode implementation
-- Graph workflow integration
+- Narrative analyst integration in trading graph
+- Tool nodes and conditional logic support
+- State management for narrative reports
 
-### 📋 **PLANNED (Phase 3)**
-- User interface integration (Web and CLI)
-- New market overview functionality
-- Enhanced user experience
+### ✅ **COMPLETED (Phase 3)**
+- Web interface integration with narrative analyst option
+- CLI market-narrative command implementation
+- Form validation for ticker-free analysis
+- Results display with narrative report support
+- User experience enhancements
 
 ### 🧪 **PLANNED (Phase 4)**
 - Comprehensive testing and validation

@@ -59,6 +59,7 @@ class AgentState(MessagesState):
     news_report: Annotated[
         str, "Report from the News Researcher of current world affairs"
     ]
+    narrative_report: Annotated[str, "Report from the Narrative Analyst (market trends and ticker recommendations)"]
     fundamentals_report: Annotated[str, "Report from the Fundamentals Researcher"]
 
     # researcher team discussion step

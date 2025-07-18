@@ -53,6 +53,7 @@ class MessageBuffer:
             "Market Analyst": "pending",
             "Social Analyst": "pending",
             "News Analyst": "pending",
+            "Narrative Analyst": "pending",
             "Fundamentals Analyst": "pending",
             # Research Team
             "Bull Researcher": "pending",
@@ -72,6 +73,7 @@ class MessageBuffer:
             "market_report": None,
             "sentiment_report": None,
             "news_report": None,
+            "narrative_report": None,
             "fundamentals_report": None,
             "investment_plan": None,
             "trader_investment_plan": None,
@@ -113,6 +115,7 @@ class MessageBuffer:
                 "market_report": "Market Analysis",
                 "sentiment_report": "Social Sentiment",
                 "news_report": "News Analysis",
+                "narrative_report": "Narrative Analysis",
                 "fundamentals_report": "Fundamentals Analysis",
                 "investment_plan": "Research Team Decision",
                 "trader_investment_plan": "Trading Team Plan",
@@ -135,6 +138,7 @@ class MessageBuffer:
                 "market_report",
                 "sentiment_report",
                 "news_report",
+                "narrative_report",
                 "fundamentals_report",
             ]
         ):
@@ -150,6 +154,10 @@ class MessageBuffer:
             if self.report_sections["news_report"]:
                 report_parts.append(
                     f"### News Analysis\n{self.report_sections['news_report']}"
+                )
+            if self.report_sections["narrative_report"]:
+                report_parts.append(
+                    f"### Narrative Analysis\n{self.report_sections['narrative_report']}"
                 )
             if self.report_sections["fundamentals_report"]:
                 report_parts.append(
@@ -226,6 +234,7 @@ def update_display(layout, spinner_text=None):
             "Market Analyst",
             "Social Analyst",
             "News Analyst",
+            "Narrative Analyst",
             "Fundamentals Analyst",
         ],
         "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
@@ -871,6 +880,93 @@ def check_api_keys(llm_provider: str) -> bool:
 
     return True
 
+def run_market_narrative_analysis():
+    """运行市场叙事分析"""
+    
+    console.print("\n[bold blue]📊 市场叙事分析 | Market Narrative Analysis[/bold blue]")
+    console.print("分析当前市场趋势和叙事，提供买卖建议\n")
+    
+    # 检查API密钥
+    llm_provider = check_api_keys("dashscope")
+    if not llm_provider:
+        console.print("[red]❌ 请先配置API密钥[/red]")
+        return
+    
+    # 获取分析参数
+    analysis_date = get_analysis_date()
+    
+    # 固定使用叙事分析师
+    analysts = ["narrative"]
+    
+    # 获取研究深度
+    research_depth = 3  # 默认使用标准分析深度
+    
+    # 获取LLM配置
+    llm_model = "qwen-plus"  # 默认使用qwen-plus
+    
+    console.print(f"\n[yellow]分析配置:[/yellow]")
+    console.print(f"  📅 分析日期: {analysis_date}")
+    console.print(f"  🤖 分析师: 叙事分析师")
+    console.print(f"  🔍 研究深度: 标准分析")
+    console.print(f"  🧠 AI模型: {llm_model}")
+    
+    # 确认开始分析
+    if not typer.confirm("\n是否开始市场叙事分析？"):
+        console.print("[yellow]分析已取消[/yellow]")
+        return
+    
+    try:
+        # 导入分析模块
+        from tradingagents.graph.trading_graph import TradingAgentsGraph
+        from tradingagents.default_config import DEFAULT_CONFIG
+        
+        # 创建配置
+        config = DEFAULT_CONFIG.copy()
+        config["llm_provider"] = llm_provider
+        config["deep_think_llm"] = llm_model
+        config["quick_think_llm"] = llm_model
+        config["max_debate_rounds"] = 1
+        config["max_risk_discuss_rounds"] = 2
+        config["memory_enabled"] = True
+        config["online_tools"] = True
+        
+        # 设置API URL
+        if llm_provider == "dashscope":
+            config["backend_url"] = "https://dashscope.aliyuncs.com/api/v1"
+        elif llm_provider == "deepseek":
+            config["backend_url"] = "https://api.deepseek.com"
+        
+        console.print("\n[green]🚀 开始市场叙事分析...[/green]")
+        
+        # 初始化交易图
+        graph = TradingAgentsGraph(analysts, config=config, debug=False)
+        
+        # 执行分析
+        state, decision = graph.propagate("MARKET_NARRATIVE", analysis_date)
+        
+        # 显示结果
+        console.print("\n[bold green]✅ 分析完成！[/bold green]\n")
+        
+        # 显示叙事分析报告
+        if "narrative_report" in state and state["narrative_report"]:
+            console.print("[bold blue]📊 市场叙事分析报告[/bold blue]")
+            console.print("=" * 50)
+            console.print(state["narrative_report"])
+            console.print("=" * 50)
+        else:
+            console.print("[yellow]⚠️ 未找到叙事分析报告[/yellow]")
+        
+        # 显示最终决策
+        if decision:
+            console.print(f"\n[bold green]🎯 市场建议:[/bold green] {decision}")
+        
+        console.print("\n[green]✅ 市场叙事分析完成！[/green]")
+        
+    except Exception as e:
+        console.print(f"\n[red]❌ 分析失败: {str(e)}[/red]")
+        console.print("[yellow]请检查API密钥配置和网络连接[/yellow]")
+
+
 def run_analysis():
     # First get all user selections
     selections = get_user_selections()
@@ -1062,6 +1158,21 @@ def run_analysis():
                         "news_report", chunk["news_report"]
                     )
                     message_buffer.update_agent_status("News Analyst", "completed")
+                    # Set next analyst to in_progress
+                    if "narrative" in selections["analysts"]:
+                        message_buffer.update_agent_status(
+                            "Narrative Analyst", "in_progress"
+                        )
+                    elif "fundamentals" in selections["analysts"]:
+                        message_buffer.update_agent_status(
+                            "Fundamentals Analyst", "in_progress"
+                        )
+
+                if "narrative_report" in chunk and chunk["narrative_report"]:
+                    message_buffer.update_report_section(
+                        "narrative_report", chunk["narrative_report"]
+                    )
+                    message_buffer.update_agent_status("Narrative Analyst", "completed")
                     # Set next analyst to in_progress
                     if "fundamentals" in selections["analysts"]:
                         message_buffer.update_agent_status(
@@ -1269,6 +1380,18 @@ def analyze():
     Launch interactive stock analysis tool
     """
     run_analysis()
+
+
+@app.command(
+    name="market-narrative",
+    help="市场叙事分析 | Market narrative analysis"
+)
+def market_narrative():
+    """
+    启动市场叙事分析工具（无需股票代码）
+    Launch market narrative analysis tool (no ticker required)
+    """
+    run_market_narrative_analysis()
 
 
 @app.command(
@@ -1639,6 +1762,11 @@ def help_chinese():
         "启动交互式多智能体股票分析工具"
     )
     commands_table.add_row(
+        "market-narrative",
+        "市场叙事分析 | Market Narrative",
+        "分析市场趋势和叙事，提供买卖建议（无需股票代码）"
+    )
+    commands_table.add_row(
         "config",
         "配置设置 | Configuration",
         "查看和配置LLM提供商、API密钥等设置"
@@ -1690,7 +1818,7 @@ def main():
             # 只在退出码为2（typer的未知命令错误）时提供智能建议
             if e.code == 2 and len(sys.argv) > 1:
                 unknown_command = sys.argv[1]
-                available_commands = ['analyze', 'config', 'version', 'data-config', 'examples', 'test', 'help']
+                available_commands = ['analyze', 'market-narrative', 'config', 'version', 'data-config', 'examples', 'test', 'help']
                 
                 # 使用difflib找到最相似的命令
                 suggestions = get_close_matches(unknown_command, available_commands, n=3, cutoff=0.6)

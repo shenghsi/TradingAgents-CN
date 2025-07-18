@@ -55,6 +55,7 @@ class GraphSetup:
                 - "social": Social media analyst
                 - "news": News analyst
                 - "fundamentals": Fundamentals analyst
+                - "narrative": Narrative analyst (market trends and ticker recommendations)
         """
         if len(selected_analysts) == 0:
             raise ValueError("Trading Agents Graph Setup Error: no analysts selected!")
@@ -104,6 +105,23 @@ class GraphSetup:
             )
             delete_nodes["news"] = create_msg_delete()
             tool_nodes["news"] = self.tool_nodes["news"]
+
+        if "narrative" in selected_analysts:
+            # 叙事分析师 - 市场趋势和ticker推荐
+            llm_provider = self.config.get("llm_provider", "").lower()
+
+            if "dashscope" in llm_provider or "阿里百炼" in self.config.get("llm_provider", ""):
+                print("📊 [DEBUG] 使用叙事分析师（阿里百炼模式）")
+            elif "deepseek" in llm_provider:
+                print("📊 [DEBUG] 使用叙事分析师（DeepSeek）")
+            else:
+                print("📊 [DEBUG] 使用叙事分析师")
+
+            analyst_nodes["narrative"] = create_narrative_analyst(
+                self.quick_thinking_llm, self.toolkit
+            )
+            delete_nodes["narrative"] = create_msg_delete()
+            tool_nodes["narrative"] = self.tool_nodes["narrative"]
 
         if "fundamentals" in selected_analysts:
             # 现在所有LLM都使用标准基本面分析师（包括阿里百炼的OpenAI兼容适配器）

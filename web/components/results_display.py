@@ -125,7 +125,8 @@ def render_analysis_info(results):
                 'market': '📈 市场技术分析师',
                 'fundamentals': '💰 基本面分析师',
                 'news': '📰 新闻分析师',
-                'social_media': '💭 社交媒体分析师',
+                'social': '💭 社交媒体分析师',
+                'narrative': '📊 叙事分析师',
                 'risk': '⚠️ 风险评估师'
             }
 
@@ -265,6 +266,12 @@ def render_detailed_analysis(state):
             'title': '📰 新闻事件分析',
             'icon': '📰', 
             'description': '相关新闻事件、市场动态影响分析'
+        },
+        {
+            'key': 'narrative_report',
+            'title': '📊 叙事趋势分析',
+            'icon': '📊',
+            'description': '市场叙事趋势、买卖建议分析'
         },
         {
             'key': 'risk_assessment',

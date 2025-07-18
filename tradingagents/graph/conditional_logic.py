@@ -41,6 +41,16 @@ class ConditionalLogic:
             return "tools_news"
         return "Msg Clear News"
 
+    def should_continue_narrative(self, state: AgentState):
+        """Determine if narrative analysis should continue."""
+        messages = state["messages"]
+        last_message = messages[-1]
+
+        # 只有AIMessage才有tool_calls属性
+        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+            return "tools_narrative"
+        return "Msg Clear Narrative"
+
     def should_continue_fundamentals(self, state: AgentState):
         """Determine if fundamentals analysis should continue."""
         messages = state["messages"]
