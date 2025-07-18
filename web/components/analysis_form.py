@@ -99,7 +99,7 @@ def render_analysis_form():
                 value=False,
                 help="分析社交媒体情绪、投资者情绪指标"
             )
-            
+        
             narrative_analyst = st.checkbox(
                 "📊 叙事分析师",
                 value=False,

@@ -108,9 +108,21 @@ Focus on actionable insights and specific ticker recommendations for US stock ma
 
         # Create prompt template
         prompt = ChatPromptTemplate.from_messages([
-            ("system", system_message),
+            (
+                "system",
+                "您是一位有用的AI助手，与其他助手协作。"
+                " 使用提供的工具来推进回答问题。"
+                " 如果您无法完全回答，没关系；具有不同工具的其他助手"
+                " 将从您停下的地方继续帮助。执行您能做的以取得进展。"
+                " 如果您或任何其他助手有最终交易提案：**买入/持有/卖出**或可交付成果，"
+                " 请在您的回应前加上最终交易提案：**买入/持有/卖出**，以便团队知道停止。"
+                " 您可以访问以下工具：{tool_names}。\n{system_message}"
+                "供您参考，当前日期是{current_date}。请用中文撰写所有分析内容。",
+            ),
             MessagesPlaceholder(variable_name="messages"),
-            ("human", f"""Analyze the current US stock market narrative and trends as of {current_date}.
+            (
+                "human", 
+                f"""Analyze the current US stock market narrative and trends as of {current_date}.
 
 Please provide a comprehensive analysis that includes:
 
@@ -127,59 +139,85 @@ For each stock recommendation, provide:
 - Risk assessment
 - Potential upside/downside
 
-Use the available tools to gather the latest market data, news, and sentiment indicators to support your analysis.""")
+Use the available tools to gather the latest market data, news, and sentiment indicators to support your analysis."""
+            )
         ])
         
-        # Create agent
-        from langchain.agents import create_react_agent, AgentExecutor
-        from langchain import hub
+        # 安全地获取工具名称，处理函数和工具对象
+        tool_names = []
+        for tool in tools:
+            if hasattr(tool, 'name'):
+                tool_names.append(tool.name)
+            elif hasattr(tool, '__name__'):
+                tool_names.append(tool.__name__)
+            else:
+                tool_names.append(str(tool))
+        
+        prompt = prompt.partial(system_message=system_message)
+        prompt = prompt.partial(tool_names=", ".join(tool_names))
+        prompt = prompt.partial(current_date=current_date)
         
         try:
-            # Use ReAct agent for tool interaction
-            react_prompt = hub.pull("hwchase17/react")
-            agent = create_react_agent(llm, tools, react_prompt)
-            agent_executor = AgentExecutor(
-                agent=agent,
-                tools=tools,
-                verbose=True,
-                handle_parsing_errors=True,
-                max_iterations=15  # Increased iterations for comprehensive analysis
-            )
-            
-            # Execute analysis
-            print(f"📊 [Narrative Analyst] Starting comprehensive market analysis...")
+            # 使用与新闻分析师相同的LangChain工具调用机制
+            print(f"📊 [Narrative Analyst] Starting comprehensive market analysis using LangChain tools...")
             start_time = time.time()
             
-            response = agent_executor.invoke({
-                "input": f"""Analyze the current US stock market narrative and trends as of {current_date}.
-
-Provide a comprehensive market analysis including:
-
-1. Current market narrative and driving forces
-2. Long-term trend analysis and cycle positioning
-3. Sector rotation and performance analysis
-4. Key opportunities and risks
-
-Then provide specific ticker recommendations:
-
-BUY RECOMMENDATIONS (5-10 stocks):
-- Stocks that align with current positive narratives
-- Companies benefiting from current trends
-- Undervalued opportunities in strong sectors
-
-SELL/AVOID RECOMMENDATIONS (5-10 stocks):
-- Stocks facing headwinds from current narratives
-- Companies hurt by current trends
-- Overvalued names in weak sectors
-
-For each recommendation, provide ticker, company name, and detailed rationale based on the current market environment."""
-            })
+            # 使用 bind_tools 机制，与新闻分析师保持一致
+            chain = prompt | llm.bind_tools(tools)
+            result = chain.invoke(state["messages"])
             
             end_time = time.time()
             print(f"📊 [Narrative Analyst] Analysis completed in {end_time - start_time:.2f} seconds")
             
-            # Extract the analysis result
-            analysis_result = response.get("output", "No analysis result available")
+            # 检查工具调用
+            if len(result.tool_calls) == 0:
+                # 没有工具调用，直接使用LLM的回复
+                analysis_result = result.content
+                print(f"📊 [Narrative Analyst] 直接回复，长度: {len(analysis_result)}")
+            else:
+                # 有工具调用，执行工具并生成完整分析报告
+                print(f"📊 [Narrative Analyst] 工具调用: {[call.get('name', 'unknown') for call in result.tool_calls]}")
+                
+                # 执行工具调用
+                from langchain_core.messages import ToolMessage, HumanMessage
+                
+                tool_messages = []
+                for tool_call in result.tool_calls:
+                    tool_name = tool_call.get('name')
+                    tool_args = tool_call.get('args', {})
+                    tool_id = tool_call.get('id')
+                    
+                    print(f"📊 [DEBUG] 执行工具: {tool_name}, 参数: {tool_args}")
+                    
+                    # 找到对应的工具并执行
+                    tool_result = None
+                    for tool in tools:
+                        if hasattr(tool, 'name') and tool.name == tool_name:
+                            try:
+                                tool_result = tool.invoke(tool_args)
+                                break
+                            except Exception as e:
+                                print(f"❌ [DEBUG] 工具执行失败: {tool_name} - {e}")
+                                tool_result = f"工具执行失败: {str(e)}"
+                                break
+                        elif hasattr(tool, '__name__') and tool.__name__ == tool_name:
+                            try:
+                                tool_result = tool(**tool_args)
+                                break
+                            except Exception as e:
+                                print(f"❌ [DEBUG] 工具执行失败: {tool_name} - {e}")
+                                tool_result = f"工具执行失败: {str(e)}"
+                                break
+                    
+                    if tool_result is None:
+                        tool_result = f"未找到工具: {tool_name}"
+                    
+                    tool_messages.append(ToolMessage(content=str(tool_result), tool_call_id=tool_id))
+                
+                # 将工具结果发送给LLM进行最终分析
+                final_messages = state["messages"] + [result] + tool_messages
+                final_result = llm.invoke(final_messages)
+                analysis_result = final_result.content
             
             # Format the final report
             narrative_report = f"""

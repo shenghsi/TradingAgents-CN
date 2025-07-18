@@ -152,16 +152,17 @@ The new analyst will provide insights into the current market narrative and tren
 - **工具可用性**: 确保叙事分析师能够正常使用新闻工具
 - **测试验证**: 通过完整测试验证修复的有效性
 
-### ✅ **COMPLETED (Phase 2.9 - Better Solution: Use Graph Workflow)**
+### ✅ **COMPLETED (Phase 2.9 - Best Solution: Use LangChain Tools)**
 - **根本原因分析**: 识别主分支成功而叙事分支失败的根本原因
 - **调用方式差异**: 主分支使用图形工作流（LangChain工具调用），叙事分支使用独立模式（直接函数调用）
-- **更好的解决方案**: 修改叙事分析师的调用方式，使用图形工作流而不是直接调用函数
+- **最佳解决方案**: 修改叙事分析师，使用与新闻分析师相同的LangChain工具调用机制
+- **ReAct Agent替换**: 将叙事分析师中的ReAct agent替换为标准的 `llm.bind_tools(tools)` 机制
+- **工具调用统一**: 确保所有分析师都使用相同的LangChain工具调用方式
 - **Web界面修复**: 修改 `web/utils/analysis_runner.py` 中的独立模式，使用 `TradingAgentsGraph(["narrative"])` 
 - **CLI修复**: 修改 `cli/main.py` 中的独立模式，使用图形工作流机制
-- **工具调用机制**: 确保工具调用通过LangChain的 `bind_tools` 机制，而不是直接调用 `interface.py` 中的函数
-- **一致性保证**: 现在叙事分析师和新闻分析师使用相同的工具调用机制
+- **架构一致性**: 所有分析师都通过统一的LangChain工具调用机制执行，确保行为一致
 - **无需修改interface.py**: 避免了修改核心数据接口文件，保持系统稳定性
-- **架构一致性**: 所有分析师都通过统一的图形工作流机制执行，确保行为一致
+- **测试验证**: 通过完整测试验证修复的有效性，确认工具调用机制正常工作
 
 ### 🎯 **REVISED PRIORITY ORDER**
 1. **Priority 1**: Complete core system integration (Item 9-10)
