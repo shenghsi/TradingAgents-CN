@@ -324,7 +324,8 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
                     )
                 
                 # 创建叙事分析师
-                narrative_analyst = create_narrative_analyst(llm_instance, toolkit)
+                from tradingagents.agents.analysts.narrative_analyst import NarrativeAnalyst
+                narrative_analyst = NarrativeAnalyst(llm_instance, toolkit)
                 
                 # 创建初始状态
                 initial_state = {
@@ -336,7 +337,7 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
                 
                 # 直接调用叙事分析师
                 update_progress("执行叙事分析...")
-                result = narrative_analyst.invoke(initial_state)
+                result = narrative_analyst.analyze_market(analysis_date)
                 
                 # 提取结果
                 if "narrative_report" in result:

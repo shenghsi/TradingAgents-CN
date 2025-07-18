@@ -136,6 +136,14 @@ The new analyst will provide insights into the current market narrative and tren
 - **Web和CLI同步修复**: 同时修复Web界面和CLI中的导入问题
 - **测试验证**: 通过完整测试验证修复的有效性
 
+### ✅ **COMPLETED (Phase 2.7 - Invoke Fix)**
+- **调用方法修复**: 修复独立叙事分析模式中的 `'function' object has no attribute 'invoke'` 错误
+- **正确类使用**: 将函数调用改为使用 `NarrativeAnalyst` 类实例
+- **方法调用修正**: 将 `narrative_analyst.invoke(initial_state)` 改为 `narrative_analyst.analyze_market(analysis_date)`
+- **面向对象设计**: 使用更符合面向对象设计的 `NarrativeAnalyst` 类
+- **Web和CLI同步修复**: 同时修复Web界面和CLI中的调用问题
+- **测试验证**: 通过完整测试验证修复的有效性
+
 ### 🎯 **REVISED PRIORITY ORDER**
 1. **Priority 1**: Complete core system integration (Item 9-10)
 2. **Priority 2**: Implement standalone analysis mode (Item 10)
